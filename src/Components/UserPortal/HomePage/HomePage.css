@@ -69,7 +69,8 @@ body {
 }
 
 .carousel-image{
-    height: 400px;
+    object-fit: contain;
+    height: 85vh;
     width: 100%;
 }
 .carousel-item{
@@ -341,4 +342,157 @@ body {
         justify-content: space-between;
         align-items: center;
     }
+}
+/* ============================================== */
+/* CSS Styles for Attractive Contact Section    */
+/* ============================================== */
+
+/* Color Palette Variables for easy changes */
+:root {
+   --primary-color: #00bcd4;    /* Fresh Teal/Cyan */
+   --secondary-color: #e0f7fa;  /* Very Light Aqua Background */
+   --background-white: #ffffff;
+   --text-dark: #37474f;        /* Dark, professional gray-blue */
+   --text-light: #607d8b;       /* Medium gray-blue for secondary text */
+   --shadow-color: rgba(0, 0, 0, 0.08); 
+}
+
+.contact-container {
+  display: flex;
+  flex-wrap: wrap; 
+  /* max-width: 1200px; */
+  width: 92%;
+  margin: 40px auto;
+  
+  box-shadow: 0 12px 30px var(--shadow-color); 
+  border-radius: 15px; 
+  overflow: hidden; 
+  /* background-color:green;     */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+
+/* --- Map Section Styling --- */
+.contact-map {
+  flex: 1 1 50%; 
+  min-height: 450px; 
+  width: 50%;
+  /* margin-left: 10px; */
+}
+
+.contact-map iframe {
+  width: 100%;
+  height: 100%;
+  border: none; 
+  display: block;
+}
+
+/* --- Details Section Styling --- */
+.contact-details {
+  flex: 1 1 30%; 
+  padding: 50px 30px; 
+  background-color: var(--secondary-color); /* Light aqua background */
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 10px;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: 10px;
+  
+  /* background-color: lightcyan; */
+  /* margin-left: 5px; */
+}
+
+.details-title {
+  color: var(--primary-color);
+  margin-bottom: 35px;
+  font-size: 2em; 
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding-bottom: 10px;
+  border-bottom: 4px solid var(--primary-color); /* Stronger underline accent */
+  display: inline-block;
+  align-self: flex-start; 
+}
+
+.detail-item {
+  display: flex;
+  align-items: center; 
+  margin-bottom: 30px;
+  padding: 10px 0;
+
+}
+
+.detail-item i {
+  font-size: 1.6em;
+  margin-right: 20px;
+  color: var(--primary-color);
+}
+
+.detail-text {
+  margin: 0;
+  line-height: 1;
+  font-size: 1.1em;
+  color: purple;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.detail-text strong {
+  display: block; /* Puts the label (e.g., "Address:") on its own line */
+  color: var(--text-dark);
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.phone-link {
+  color: color(srgb red green blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease, transform 0.3s ease;
+  display: inline-block;
+}
+.address-link{
+    color:  green
+
+}
+
+.phone-link:hover {
+  color: var(--primary-color);
+  transform: translateX(3px); /* Subtle shift on hover */
+  text-decoration: none;
+}
+
+
+@media (max-width: 900px) {
+  .contact-container {
+    margin: 20px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-container {
+    flex-direction: column; /* Stacks map and details vertically */
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .contact-map {
+    order: 1; 
+    min-height: 300px;
+  }
+
+  .contact-details {
+    order: 2;
+    padding: 30px 20px;
+  }
+  
+  .details-title {
+      font-size: 1.7em;
+      margin-bottom: 25px;
+  }
 }

@@ -16,12 +16,8 @@ const UserOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
 
-  // Statistics
-  const [statistics, setStatistics] = useState(null);
-
   useEffect(() => {
     fetchAllOrders();
-    fetchStatistics();
   }, []);
 
   useEffect(() => {
@@ -51,22 +47,21 @@ const UserOrders = () => {
     }
   };
 
-  const fetchStatistics = async () => {
-    try {
-      const token = Cookies.get('jwttoken');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/orders/statistics`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        setStatistics(response.data.statistics);
-      }
-    } catch (err) {
-      console.error('Error fetching statistics:', err);
-    }
+  // Calculate statistics dynamically from filtered orders
+  const calculateStatistics = () => {
+    const stats = {
+      totalOrders: filteredOrders.length,
+      processingOrders: filteredOrders.filter(order => order.orderStatus?.toLowerCase() === 'processing').length,
+      deliveredOrders: filteredOrders.filter(order => order.orderStatus?.toLowerCase() === 'delivered').length,
+      cancelledOrders: filteredOrders.filter(order => order.orderStatus?.toLowerCase() === 'cancelled').length,
+      shippedOrders: filteredOrders.filter(order => order.orderStatus?.toLowerCase() === 'shipped').length,
+      totalRevenue: filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)
+    };
+    return stats;
   };
+
+  // Get dynamic statistics
+  const statistics = calculateStatistics();
 
   const applyFilters = () => {
     let filtered = [...orders];
@@ -128,7 +123,6 @@ const UserOrders = () => {
           order._id === orderId ? { ...order, orderStatus: newStatus } : order
         ));
         alert('Order status updated successfully');
-        fetchStatistics(); // Refresh statistics after update
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update order status');
@@ -180,27 +174,44 @@ const UserOrders = () => {
         
       </div>
 
-      {/* Statistics Cards */}
-      {statistics && (
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <h3>Total Orders</h3>
-            <p className={styles.statNumber}>{statistics.totalOrders}</p>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Processing</h3>
-            <p className={styles.statNumber} style={{color: '#3498db'}}>{statistics.processingOrders}</p>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Delivered</h3>
-            <p className={styles.statNumber} style={{color: '#27ae60'}}>{statistics.deliveredOrders}</p>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Total Revenue</h3>
-            <p className={styles.statNumber}>₹{statistics.totalRevenue}</p>
-          </div>
-        </div>
-      )}
+      {/* Statistics Cards - Now Dynamic */}
+      <div className={styles.statsGrid}>
+              <div className={styles.statCard} style={{borderLeft: '4px solid #3498db'}}>
+                <h3>📦 Total Orders</h3>
+                <p className={styles.statNumber}>{statistics.totalOrders}</p>
+                <small style={{color: '#666'}}>Filtered orders</small>
+              </div>
+      
+              <div className={styles.statCard} style={{borderLeft: '4px solid #3498db'}}>
+                <h3>🔄 Processing</h3>
+                <p className={styles.statNumber} style={{color: '#3498db'}}>{statistics.processingOrders}</p>
+                <small style={{color: '#666'}}>Currently processing</small>
+              </div>
+      
+              <div className={styles.statCard} style={{borderLeft: '4px solid #27ae60'}}>
+                <h3>✅ Delivered</h3>
+                <p className={styles.statNumber} style={{color: '#27ae60'}}>{statistics.deliveredOrders}</p>
+                <small style={{color: '#666'}}>Successfully delivered</small>
+              </div>
+      
+              <div className={styles.statCard} style={{borderLeft: '4px solid #e74c3c'}}>
+                <h3>❌ Cancelled</h3>
+                <p className={styles.statNumber} style={{color: '#e74c3c'}}>{statistics.cancelledOrders}</p>
+                <small style={{color: '#666'}}>Cancelled orders</small>
+              </div>
+      
+              <div className={styles.statCard} style={{borderLeft: '4px solid #f39c12'}}>
+                <h3>🚚 Shipped</h3>
+                <p className={styles.statNumber} style={{color: '#f39c12'}}>{statistics.shippedOrders}</p>
+                <small style={{color: '#666'}}>Successfully shipped</small>
+              </div>
+      
+              <div className={styles.statCard} style={{borderLeft: '4px solid #9b59b6'}}>
+                <h3>💰 Total Revenue</h3>
+                <p className={styles.statNumber} style={{color: '#9b59b6'}}>₹{statistics.totalRevenue}</p>
+                <small style={{color: '#666'}}>Average Value</small>
+              </div>
+            </div>
 
       {/* Filters */}
       <div className={styles.filtersContainer}>
@@ -385,7 +396,7 @@ const UserOrders = () => {
                     <div className={styles.itemDetails}>
                       <p><strong>{item.productId?.title || 'Product'}</strong></p>
                       <p>Quantity: {item.quantity}</p>
-                      <p>Price at Order: ${item.priceAtOrder?.toFixed(2)}</p>
+                      <p>Price at Order: ₹{item.priceAtOrder?.toFixed(2)}</p>
                     </div>
                     <div className={styles.itemTotal}>
                       ₹{(item.priceAtOrder * item.quantity).toFixed(2)}

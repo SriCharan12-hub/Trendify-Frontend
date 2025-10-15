@@ -4,6 +4,8 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import NavSearch from '../../AdminPortal/NavSearch/NavSearch';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '../../../Slice';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -32,6 +34,7 @@ const Checkout = () => {
 
     const token = Cookies.get('jwttoken');
     const headers = { Authorization: `Bearer ${token}` };
+    const dispatch = useDispatch();
 
     const fetchAddresses = async () => {
         if (!token) return;
@@ -223,6 +226,11 @@ const Checkout = () => {
                         }
                     } 
                 });
+                // Clear local cart immediately so navbar updates
+                try {
+                    dispatch(clearCart());
+                } catch (e) { console.debug('clearCart dispatch failed', e); }
+                try { localStorage.removeItem('cartState'); localStorage.removeItem('cart'); } catch (e) { console.debug('failed clearing localStorage after order', e); }
                 window.scrollTo(0, 0);
             }
         } catch (err) {

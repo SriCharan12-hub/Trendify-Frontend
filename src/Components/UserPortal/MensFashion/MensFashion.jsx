@@ -6,6 +6,8 @@ import ShoppingCart from "../ShoppingCart/ShoppingCart";
 import Wishlist from "../Wishlist/Wishlist";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { addToCart as addToCartAction, decrementQuantity, removeFromCart as removeFromCartAction } from '../../../Slice';
 
 const MensFashion = () => {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ const MensFashion = () => {
   const [cart, setCart] = useState({});
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useDispatch();
+  
   // Load persisted cart from localStorage immediately so counters persist on reload
   useEffect(() => {
     try {
@@ -129,7 +133,8 @@ const MensFashion = () => {
     setCurrentPage(1);
   }, [mensFashionProducts, selectedPriceRange, sortOrder, searchQuery]);
 
-  const handleAddToCart = async (product) => {
+  const handleAddToCart = async (product, e) => {
+    e.stopPropagation();
     const token = Cookies.get("jwttoken");
     if (!token) {
       alert("Please log in to add items to your cart.");
@@ -138,6 +143,11 @@ const MensFashion = () => {
     const productId = String(product._id);
     const existingQuantity = cart[productId] || 0;
     setCart((prevCart) => ({ ...prevCart, [productId]: existingQuantity + 1 }));
+    try { 
+      dispatch(addToCartAction({ productId })); 
+    } catch (e) { 
+      console.debug('optimistic add failed', e); 
+    }
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL}/cart/add`,
@@ -146,6 +156,11 @@ const MensFashion = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      try {
+        localStorage.setItem("cart", JSON.stringify({ ...cart, [productId]: existingQuantity + 1 }));
+      } catch {
+        // ignore localStorage errors
+      }
     } catch (err) {
       console.error("Failed to add to cart (server)", err);
       setCart((prevCart) => ({ ...prevCart, [productId]: existingQuantity }));
@@ -153,7 +168,8 @@ const MensFashion = () => {
     }
   };
 
-  const handleRemoveFromCart = async (productId) => {
+  const handleRemoveFromCart = async (productId, e) => {
+    e.stopPropagation();
     const token = Cookies.get("jwttoken");
     if (!token) return;
     const existingQuantity = cart[productId] || 0;
@@ -165,8 +181,22 @@ const MensFashion = () => {
       } else {
         delete nextCart[productId];
       }
+      try {
+        localStorage.setItem("cart", JSON.stringify(nextCart));
+      } catch {
+        // ignore localStorage errors
+      }
       return nextCart;
     });
+    try {
+      if (newQuantity > 0) {
+        dispatch(decrementQuantity(productId));
+      } else {
+        dispatch(removeFromCartAction(String(productId)));
+      }
+    } catch (e) { 
+      console.debug('optimistic remove failed', e); 
+    }
     try {
       if (newQuantity > 0) {
         await axios.put(
@@ -189,7 +219,8 @@ const MensFashion = () => {
     }
   };
 
-  const handleAddToWishlist = async (product) => {
+  const handleAddToWishlist = async (product, e) => {
+    e.stopPropagation();
     const token = Cookies.get("jwttoken");
     if (!token) {
       alert("Please log in to add items to your wishlist.");
@@ -224,7 +255,8 @@ const MensFashion = () => {
     }
   };
 
-  const handleRemoveFromWishlist = async (productId) => {
+  const handleRemoveFromWishlist = async (productId, e) => {
+    e.stopPropagation();
     const token = Cookies.get("jwttoken");
     if (!token) return;
     setWishlist((prevWishlist) =>
@@ -241,6 +273,10 @@ const MensFashion = () => {
     }
   };
 
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
+  };
+
   const isProductInWishlist = (productId) =>
     wishlist.some((item) => String(item.productId) === String(productId));
 
@@ -252,7 +288,10 @@ const MensFashion = () => {
   );
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const renderPageNumbers = () => {
     const pageNumbers = [];
@@ -272,12 +311,11 @@ const MensFashion = () => {
 
   if (loading) {
     return (
-    <div className="loader-container">
-      <div className="loader"></div>
-      <p>Loading...</p>
-    </div>
-    )
-
+      <div className="loader-container">
+        <div className="loader"></div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -305,7 +343,6 @@ const MensFashion = () => {
           >
             Back
           </button>
-          {/* <button className='back-btn' onClick={() => navigate('/homepage')}><a href='#categories-id' style={{textDecoration:"none",color:"white"}}>Back</a></button> */}
           <aside
             className="filters-sidebar"
             style={{ marginTop: "40px", marginLeft: "0px" }}
@@ -325,7 +362,6 @@ const MensFashion = () => {
                 <option value="1001-999999">Over ₹1000</option>
               </select>
             </div>
-            {/* Moved Sort by into the filters sidebar */}
             <div className="filter-group">
               <label htmlFor="sort">Sort by:</label>
               <select
@@ -344,106 +380,119 @@ const MensFashion = () => {
           <div className="listing-header">
             <h1 className="category-title">Men's Fashion</h1>
           </div>
-          <div className="product-grid">
+          <div className="product-grid-new">
             {filteredProducts.length === 0 ? (
-               <div className="no-products-container">
+              <div className="no-products-container">
                 <img
-                    src="https://cdn-icons-png.flaticon.com/512/4076/4076439.png" // you can replace with your own image
-                    alt="No products"
-                    className="no-products-image"
+                  src="https://cdn-icons-png.flaticon.com/512/4076/4076439.png"
+                  alt="No products"
+                  className="no-products-image"
                 />
                 <h2 className="no-products-text">No Products Available</h2>
                 <p className="no-products-subtext">
-                    Please check back later or adjust your filters.
+                  Please check back later or adjust your filters.
                 </p>
-                </div>
+              </div>
             ) : (
               currentProducts.map((product) => (
-                <div className="product-card" key={product._id}>
-                  <button
-                    className={`wishlist-icon ${
-                      isProductInWishlist(product._id) ? "added" : ""
-                    }`}
-                    onClick={() =>
-                      isProductInWishlist(product._id)
-                        ? handleRemoveFromWishlist(product._id)
-                        : handleAddToWishlist(product)
-                    }
-                  >
-                    {isProductInWishlist(product._id) ? "❤️" : "🤍"}
-                  </button>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="product-image-large"
-                  />
-                  <h3 className="product-title">{product.title}</h3>
-                  <p className="product-price">₹{product.price}</p>
-                  <div className="product-actions">
-                    {cart[String(product._id)] ? (
-                      <div className="cart-counter">
-                        <button
-                          onClick={() => handleRemoveFromCart(product._id)}
+                <div 
+                  className="product-card-new" 
+                  key={product._id}
+                  onClick={() => { handleProductClick(product._id); window.scrollTo(0, 0); }}
+                >
+                  <div className="product-image-section">
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="product-image-new"
+                    />
+                     <button
+                          className={`wishlist-button-new ${
+                            isProductInWishlist(product._id) ? "active" : ""
+                          }`}
+                          onClick={(e) =>
+                            isProductInWishlist(product._id)
+                              ? handleRemoveFromWishlist(product._id, e)
+                              : handleAddToWishlist(product, e)
+                          }
                         >
-                          -
+                          {isProductInWishlist(product._id) ? "❤️" : "🤍"}
                         </button>
-                        <span>{cart[String(product._id)]}</span>
-                        <button onClick={() => handleAddToCart(product)}>
-                          +
-                        </button>
+                  </div>
+                  <div className="product-info-section">
+                    <div className="product-category-badge">{product.category || 'Fashion'}</div>
+                    <h3 className="product-title-new">{product.title}</h3>
+                    <p className="product-description-new">{product.description}</p>
+                    <div className="product-bottom-section">
+                      <div className="price-stock-section">
+                        <span className="product-price-new">₹{product.price}</span>
                       </div>
-                    ) : (
-                      <button
-                        className="add-to-cart-btn"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        Add to Cart
-                      </button>
-                    )}
+                      <div className="product-actions-section">
+                       
+                        {cart[String(product._id)] ? (
+                          <div className="cart-quantity-control">
+                            <button
+                              className="minus quantity-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveFromCart(product._id, e);
+                              }}
+                            >
+                              -
+                            </button>
+                            <span className="quantity-display">{cart[String(product._id)]}</span>
+                            <button 
+                              className="plus quantity-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddToCart(product, e);
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="add-cart-button-new"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(product, e);
+                            }}
+                          >
+                            Add to Cart
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
-          <div className="pagination">
-            <span
-              className={`page-arrow ${currentPage === 1 ? "disabled" : ""}`}
-              onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-            >
-              &lt;
-            </span>
-            {renderPageNumbers()}
-            <span
-              className={`page-arrow ${
-                currentPage === totalPages ? "disabled" : ""
-              }`}
-              onClick={() =>
-                currentPage < totalPages && paginate(currentPage + 1)
-              }
-            >
-              &gt;
-            </span>
-          </div>
+          {filteredProducts.length > 0 && (
+            <div className="pagination">
+              <span
+                className={`page-arrow ${currentPage === 1 ? "disabled" : ""}`}
+                onClick={() => currentPage > 1 && paginate(currentPage - 1)}
+              >
+                &lt;
+              </span>
+              {renderPageNumbers()}
+              <span
+                className={`page-arrow ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+                onClick={() =>
+                  currentPage < totalPages && paginate(currentPage + 1)
+                }
+              >
+                &gt;
+              </span>
+            </div>
+          )}
         </main>
       </div>
-      {/* {isCartOpen && (
-                <ShoppingCart
-                    cart={cart}
-                    allProducts={mensFashionProducts}
-                    setCart={setCart}
-                    onClose={() => setIsCartOpen(false)}
-                />
-            )} */}
-      {/* {isWishlistOpen && (
-                <Wishlist
-                    wishlist={wishlist}
-                    onClose={() => setIsWishlistOpen(false)}
-                    onRemoveFromWishlist={handleRemoveFromWishlist}
-                />
-            )} */}
-      <footer className="footer">
-        <p>© 2024 Tech Emporium. All rights reserved.</p>
-      </footer>
+    
     </div>
   );
 };

@@ -3,6 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import "./OrderConfirmed.css";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FaWhatsapp } from "react-icons/fa";  
 
 // ✅ Set your correct API base URL here
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}`; // Change to your actual backend port
@@ -160,24 +161,27 @@ const OrderConfirmed = () => {
     taxes,
     total,
   } = orderData ?? {};
+
+
+  const handleClick = () => {
+    window.open("https://wa.me/919963120290?text=Hello!%20I%20want%20to%20confirm%20my%20order.", "_blank");
+  };
   
 
   return (
     <div className="order-container">
       <button className="back-btn1" onClick={() => {navigate('/checkout'); window.scrollTo(0, 0);}}>Back</button>
       <div className="order-card">
-        <div className="order-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="28"
-            height="28"
-            fill="white"
-          >
-            <path d="M20.285 6.709a1 1 0 0 0-1.414-1.418l-9.192 9.2-4.243-4.243a1 1 0 0 0-1.414 1.414l5 5a1 1 0 0 0 1.414 0l10-10Z" />
+       <div className="checkmark-container">
+          <svg className="checkmark" viewBox="0 0 52 52">
+          <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="#e0f7e0" />
+          <path
+            className="checkmark-check"
+            fill="none"
+            d="M14.1 27.2l7.1 7.2 16.8-16.8"
+          />
           </svg>
-        </div>
-
+      </div>
         <h1 className="order-title">Order Confirmed! 🎉</h1>
         <p className="order-message">
           Thank you for your purchase. Your order is being processed.
@@ -225,6 +229,10 @@ const OrderConfirmed = () => {
         </div>
 
         <div className="order-actions">
+           <button className="whatsapp-button" onClick={handleClick}>
+            <FaWhatsapp className="whatsapp-icon" />
+            Chat on WhatsApp to Confirm Order
+          </button>
           <button className="btn secondary" onClick={handleContinueShopping}>
             Continue Shopping
           </button>

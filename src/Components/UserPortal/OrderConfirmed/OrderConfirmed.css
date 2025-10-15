@@ -7,8 +7,67 @@
   padding: 30px;
   min-height: 100vh;
   background: #f7f9fc;
-  margin-top: 50px;
+  margin-top: 45px;
 }
+.checkmark-container {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  margin-bottom: 20px ;
+}
+
+.checkmark {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 1.5;
+  stroke: purple;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px purple;
+  animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: purple;
+  fill: none;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke-width: 2;
+  stroke: purple;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+}
+
+/* Animations */
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.05, 1.05, 1);
+  }
+}
+
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 10px purple;
+  }
+}
+
 
 /* Card */
 .order-card {
@@ -171,7 +230,7 @@
 .btn.secondary {
   background: #eaf3ff;
   color: white;
-  background-color: #27ae60;
+  background-color: steelblue;
 }
 
 .btn.tertiary {
@@ -213,4 +272,31 @@
 .order-icon svg {
   width: 34px;
   height: 34px;
+}
+.whatsapp-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px;
+  background-color: #25D366;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 380px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.whatsapp-button:hover {
+  background-color: #1ebe5b;
+  transform: translateY(-2px);
+}
+
+.whatsapp-icon {
+  font-size: 20px;
 }

@@ -4,10 +4,11 @@ import Navbar from '../../Navbar/Navbar';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addToCart as addToCartAction, decrementQuantity, removeFromCart as removeFromCartAction } from '../../../Slice';
 
 const WomensFashion = () => {
     const navigate = useNavigate();
-    // no longer using URL search; listen to header events instead
     const [womensClothingProducts, setWomensClothingProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,6 +20,7 @@ const WomensFashion = () => {
     const [cart, setCart] = useState({});
     const [wishlist, setWishlist] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const dispatch = useDispatch();
 
     // Load persisted cart from localStorage immediately so counters persist on reload
     useEffect(() => {
@@ -125,7 +127,8 @@ const WomensFashion = () => {
         setCurrentPage(1);
     }, [womensClothingProducts, selectedPriceRange, sortOrder, searchQuery]);
 
-    const handleAddToCart = async (product) => {
+    const handleAddToCart = async (product, e) => {
+        e.stopPropagation(); // Prevent navigation when clicking cart button
         const token = Cookies.get('jwttoken');
         if (!token) {
             alert("Please log in to add items to your cart.");
@@ -134,10 +137,20 @@ const WomensFashion = () => {
         const productId = String(product._id);
         const existingQuantity = cart[productId] || 0;
         setCart(prevCart => ({ ...prevCart, [productId]: existingQuantity + 1 }));
+        try { 
+            dispatch(addToCartAction({ productId })); 
+        } catch (e) { 
+            console.debug('optimistic add failed', e); 
+        }
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/cart/add`, { productId, quantity: existingQuantity + 1 }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            try {
+                localStorage.setItem('cart', JSON.stringify({ ...cart, [productId]: existingQuantity + 1 }));
+            } catch {
+                // ignore localStorage errors
+            }
         } catch (err) {
             console.error('Failed to add to cart (server)', err);
             setCart(prevCart => ({ ...prevCart, [productId]: existingQuantity }));
@@ -145,7 +158,8 @@ const WomensFashion = () => {
         }
     };
 
-    const handleRemoveFromCart = async (productId) => {
+    const handleRemoveFromCart = async (productId, e) => {
+        e.stopPropagation(); // Prevent navigation when clicking cart button
         const token = Cookies.get('jwttoken');
         if (!token) return;
         const existingQuantity = cart[productId] || 0;
@@ -157,8 +171,22 @@ const WomensFashion = () => {
             } else {
                 delete nextCart[productId];
             }
+            try {
+                localStorage.setItem('cart', JSON.stringify(nextCart));
+            } catch {
+                // ignore localStorage errors
+            }
             return nextCart;
         });
+        try { 
+            if (newQuantity > 0) {
+                dispatch(decrementQuantity(productId));
+            } else {
+                dispatch(removeFromCartAction(String(productId)));
+            }
+        } catch (e) { 
+            console.debug('optimistic remove failed', e); 
+        }
         try {
             if (newQuantity > 0) {
                 await axios.put(`${import.meta.env.VITE_API_URL}/cart/item`, { productId, quantity: newQuantity }, {
@@ -177,7 +205,8 @@ const WomensFashion = () => {
         }
     };
 
-    const handleAddToWishlist = async (product) => {
+    const handleAddToWishlist = async (product, e) => {
+        e.stopPropagation(); // Prevent navigation when clicking wishlist button
         const token = Cookies.get('jwttoken');
         if (!token) {
             alert("Please log in to add items to your wishlist.");
@@ -201,7 +230,8 @@ const WomensFashion = () => {
         }
     };
 
-    const handleRemoveFromWishlist = async (productId) => {
+    const handleRemoveFromWishlist = async (productId, e) => {
+        e.stopPropagation(); // Prevent navigation when clicking wishlist button
         const token = Cookies.get('jwttoken');
         if (!token) return;
         setWishlist(prevWishlist => prevWishlist.filter(item => String(item.productId) !== productId));
@@ -214,6 +244,10 @@ const WomensFashion = () => {
             console.error('Failed to remove from wishlist (server)', err);
             alert("Failed to remove from wishlist. Please try again.");
         }
+    };
+
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`);
     };
 
     const isProductInWishlist = (productId) => wishlist.some(item => String(item.productId) === String(productId));
@@ -242,10 +276,12 @@ const WomensFashion = () => {
     };
 
     if (loading) {
-        return <div className="loader-container">
-      <div className="loader"></div>
-      <p>Loading...</p>
-    </div>
+        return (
+            <div className="loader-container">
+                <div className="loader"></div>
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     if (error) {
@@ -257,30 +293,29 @@ const WomensFashion = () => {
         <div className="product-page">
             <Navbar/>
             <div className="main-content">
-                {/* <button className='back-btn' onClick={() => navigate('/homepage')}><a href='#categories-id' style={{textDecoration:"none",color:"white"}}>Back</a></button> */}
                 <div>
-                <button onClick={()=>navigate('/homepage')} style={{color:'white',backgroundColor:"purple",padding:"10px",borderRadius:"5px",borderWidth:"0px",cursor:"pointer",height:"40px",width:"70px"}}>Back</button>
-                <aside className="filters-sidebar">
-                    <h2>Filters</h2>
-                    <div className="filter-group">
-                        <label htmlFor="price">Price Range</label>
-                        <select id="price" value={selectedPriceRange} onChange={(e) => setSelectedPriceRange(e.target.value)}>
-                            <option>All Prices</option>
-                            <option value="0-100">0 - ₹100</option>
-                            <option value="101-500">₹101 - ₹500</option>
-                            <option value="501-1000">₹501 - ₹1000</option>
-                            <option value="1001-999999">Over ₹1000</option>
-                        </select>
-                    </div>
-                    <div className="filter-group">
-                        <label htmlFor="sort">Sort by:</label>
-                        <select id="sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
-                            <option value="Newest Arrivals">Newest Arrivals</option>
-                            <option value="Low to High">Price: Low to High</option>
-                            <option value="High to Low">Price: High to Low</option>
-                        </select>
-                    </div>
-                </aside>
+                    <button onClick={()=>navigate('/homepage')} style={{color:'white',backgroundColor:"purple",padding:"10px",borderRadius:"5px",borderWidth:"0px",cursor:"pointer",height:"40px",width:"70px"}}>Back</button>
+                    <aside className="filters-sidebar">
+                        <h2>Filters</h2>
+                        <div className="filter-group">
+                            <label htmlFor="price">Price Range</label>
+                            <select id="price" value={selectedPriceRange} onChange={(e) => setSelectedPriceRange(e.target.value)}>
+                                <option>All Prices</option>
+                                <option value="0-100">0 - ₹100</option>
+                                <option value="101-500">₹101 - ₹500</option>
+                                <option value="501-1000">₹501 - ₹1000</option>
+                                <option value="1001-999999">Over ₹1000</option>
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label htmlFor="sort">Sort by:</label>
+                            <select id="sort" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+                                <option value="Newest Arrivals">Newest Arrivals</option>
+                                <option value="Low to High">Price: Low to High</option>
+                                <option value="High to Low">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </aside>
                 </div>
                 <main className="product-listing">
                     <div className="listing-header">
@@ -289,10 +324,15 @@ const WomensFashion = () => {
                     <div className="product-grid">
                         {currentProducts.length > 0 ? (
                             currentProducts.map((product) => (
-                                <div className="product-card" key={product._id}>
+                                <div 
+                                    className="product-card" 
+                                    key={product._id}
+                                    onClick={() => { handleProductClick(product._id); window.scrollTo(0, 0); }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <button
                                         className={`wishlist-icon ${isProductInWishlist(product._id) ? 'added' : ''}`}
-                                        onClick={() => isProductInWishlist(product._id) ? handleRemoveFromWishlist(product._id) : handleAddToWishlist(product)}
+                                        onClick={(e) => isProductInWishlist(product._id) ? handleRemoveFromWishlist(product._id, e) : handleAddToWishlist(product, e)}
                                     >
                                         {isProductInWishlist(product._id) ? '❤️' : '🤍'}
                                     </button>
@@ -302,12 +342,12 @@ const WomensFashion = () => {
                                     <div className="product-actions">
                                         {cart[String(product._id)] ? (
                                             <div className="cart-counter">
-                                                <button onClick={() => handleRemoveFromCart(product._id)}>-</button>
+                                                <button onClick={(e) => handleRemoveFromCart(product._id, e)}>-</button>
                                                 <span>{cart[String(product._id)]}</span>
-                                                <button onClick={() => handleAddToCart(product)}>+</button>
+                                                <button onClick={(e) => handleAddToCart(product, e)}>+</button>
                                             </div>
                                         ) : (
-                                            <button className="add-to-cart-btn" onClick={() => handleAddToCart(product)}>
+                                            <button className="add-to-cart-btn" onClick={(e) => handleAddToCart(product, e)}>
                                                 Add to Cart
                                             </button>
                                         )}
@@ -316,16 +356,16 @@ const WomensFashion = () => {
                             ))
                         ) : (
                             <div className="no-products-container">
-                <img
-                    src="https://cdn-icons-png.flaticon.com/512/4076/4076439.png" // you can replace with your own image
-                    alt="No products"
-                    className="no-products-image"
-                />
-                <h2 className="no-products-text">No Products Available</h2>
-                <p className="no-products-subtext">
-                    Please check back later or adjust your filters.
-                </p>
-                </div>
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/4076/4076439.png"
+                                    alt="No products"
+                                    className="no-products-image"
+                                />
+                                <h2 className="no-products-text">No Products Available</h2>
+                                <p className="no-products-subtext">
+                                    Please check back later or adjust your filters.
+                                </p>
+                            </div>
                         )}
                     </div>
                     <div className="pagination">
@@ -345,9 +385,7 @@ const WomensFashion = () => {
                     </div>
                 </main>
             </div>
-            <footer className="footer">
-                <p>© 2024 Tech Emporium. All rights reserved.</p>
-            </footer>
+          
         </div>
     );
 };

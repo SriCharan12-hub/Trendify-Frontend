@@ -1,9 +1,8 @@
+// src/Components/HomePage/HomePage.jsx
 import React from "react";
 import "./HomePage.css";
 import { useNavigate } from "react-router-dom";
-// import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-// import { Cursor } from 'mongoose';
-// Dummy data for products, categories, and testimonials
+
 const categories = [
   {
     name: `Men's Fashion`,
@@ -20,7 +19,6 @@ const categories = [
     image:
       "https://e7.pngegg.com/pngimages/791/606/png-clipart-home-appliance-technique-for-you-washing-machines-clothes-dryer-others-miscellaneous-electronics.png",
   },
-
   {
     name: "Accessories",
     image:
@@ -69,35 +67,50 @@ const testimonials = [
       "https://www.investcorp.com/wp-content/uploads/2019/11/Mason_Emily-0001.jpg",
   },
 ];
- const address = "Shop no 337, 338, Pvt Market, Dilsukhnagar";
-  const contactNo = "7675904571";
-  const mapsEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.928254735459!2d78.53851759999999!3d17.367185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb98e959015689%3A0xfe758eee6bc055ac!2sPvt%20market%20kothapet%20dilsukhnagar%20Hyderabad%20500035!5e0!3m2!1sen!2sin!4v1759999191745!5m2!1sen!2sin"; 
+
+const address = "Shop no 337, 338, Pvt Market, Dilsukhnagar";
+const contactNo = "7675904571";
+const mapsEmbedUrl =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.928254735459!2d78.53851759999999!3d17.367185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb98e959015689%3A0xfe758eee6bc055ac!2sPvt%20market%20kothapet%20dilsukhnagar%20Hyderabad%20500035!5e0!3m2!1sen!2sin!4v1759999191745!5m2!1sen!2sin";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  // const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(CHARMINAR_DESTINATION)}&destination_place_id=${CHARMINAR_PLACE_ID}`;
+
+  const handleCategoryClick = (categoryName) => {
+    window.scrollTo(0, 0);
+    const routes = {
+      "Electronics": "/userproducts",
+      "Men's Fashion": "/mensfashion",
+      "Accessories": "/accessories",
+      "Women's Fashion": "/womensfashion",
+    };
+    if (routes[categoryName]) {
+      navigate(routes[categoryName]);
+    }
+  };
+
   return (
     <div className="home-page">
       {/* Hero Section */}
       <section className="hero-section">
         <div
           id="carouselExampleIndicators"
-          class="carousel slide"
+          className="carousel slide"
           data-ride="carousel"
         >
-          <ol class="carousel-indicators">
+          <ol className="carousel-indicators">
             <li
               data-target="#carouselExampleIndicators"
               data-slide-to="0"
-              class="active"
+              className="active"
             ></li>
             <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
             <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
           </ol>
-          <div class="carousel-inner">
-            <div class="carousel-item active">
+          <div className="carousel-inner">
+            <div className="carousel-item active">
               <img
-                class="carousel-image"
+                className="carousel-image"
                 src="https://templates.simplified.co/thumb/3446e660-7af3-4ff6-86ce-755afcde8fcd.jpg"
                 style={{ cursor: "pointer" }}
                 onClick={() => {
@@ -109,9 +122,9 @@ const HomePage = () => {
                 alt="First slide"
               />
             </div>
-            <div class="carousel-item">
+            <div className="carousel-item">
               <img
-                class="carousel-image"
+                className="carousel-image"
                 src="https://graphicsfamily.com/wp-content/uploads/edd/2023/12/Fashion-Web-Banner-Design-1180x664.jpg"
                 alt="Second slide"
                 style={{ cursor: "pointer" }}
@@ -122,15 +135,10 @@ const HomePage = () => {
                     .scrollIntoView({ behavior: "smooth" });
                 }}
               />
-              {/* <div className="hero-content">
-                    <h1>Elevate Your Style</h1>
-                    <p>Discover the latest trends in fashion and electronics. Shop now and define your look.</p>
-                    <button className="shop-now-btn"><a href='#categories-id' style={{textDecoration:"none", color:"white"}}>Shop Now</a></button>
-                </div> */}
             </div>
-            <div class="carousel-item">
+            <div className="carousel-item">
               <img
-                class="carousel-image"
+                className="carousel-image"
                 src="https://i.pinimg.com/1200x/d2/b9/40/d2b940959caadeaf591041c70ab7a0ab.jpg"
                 style={{ cursor: "pointer" }}
                 onClick={() => {
@@ -144,22 +152,22 @@ const HomePage = () => {
             </div>
           </div>
           <a
-            class="carousel-control-prev"
+            className="carousel-control-prev"
             href="#carouselExampleIndicators"
             role="button"
             data-slide="prev"
           >
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="sr-only">Previous</span>
+            <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span className="sr-only">Previous</span>
           </a>
           <a
-            class="carousel-control-next"
+            className="carousel-control-next"
             href="#carouselExampleIndicators"
             role="button"
             data-slide="next"
           >
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="sr-only">Next</span>
+            <span className="carousel-control-next-icon" aria-hidden="true"></span>
+            <span className="sr-only">Next</span>
           </a>
         </div>
       </section>
@@ -172,24 +180,13 @@ const HomePage = () => {
             <div
               key={index}
               className="category-item"
-              onClick={() => {
-                window.scrollTo(0, 0);
-                if (cat.name === "Electronics") navigate("/userproducts");
-                else if (cat.name === `Men's Fashion`) navigate("/mensfashion");
-                else if (cat.name === "Accessories") navigate("/accessories");
-                else if (cat.name === `Women's Fashion`)
-                  navigate("/womensfashion");
-              }}
+              onClick={() => handleCategoryClick(cat.name)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  if (cat.name === "Electronics") navigate("/userproducts");
-                } else if (cat.name === `Men's Fashion`)
-                  navigate("/mensfashion");
-                else if (cat.name === "Accessories") navigate("/accessories");
-                else if (cat.name === `Women's Fashion`)
-                  navigate("/womensfashion");
+                  handleCategoryClick(cat.name);
+                }
               }}
             >
               <img
@@ -245,7 +242,7 @@ const HomePage = () => {
         </div>
         <div className="deal-image">
           <img
-            src="https://res.cloudinary.com/dedmnd9gb/image/upload/v1758774697/Screenshot_2025-09-25_100012_r82hhd.png"
+            src="https://res.cloudinary.com/sricharan/image/upload/v1758774697/Screenshot_2025-09-25_100012_r82hhd.png"
             alt="Limited Time Deal"
           />
         </div>
@@ -268,52 +265,46 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-       <div className="contact-container">
-      {/* 1. Map Section */}
-      <div className="contact-map">
-        <iframe
-          title="Google Map Location"
-          src={mapsEmbedUrl}
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        ></iframe>
+
+      {/* Contact Section */}
+      <div className="contact-container">
+        <div className="contact-map">
+          <iframe
+            title="Google Map Location"
+            src={mapsEmbedUrl}
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+
+        <div className="contact-details">
+          <h2 className="details-title">Visit Our Location</h2>
+          <div className="detail-item">
+            <i className="fas fa-map-marker-alt"></i>
+            <p className="detail-text">
+              Address:
+              <br />
+              <span className="address-link">{address}</span>
+            </p>
+          </div>
+          <div className="detail-item">
+            <i className="fas fa-phone"></i>
+            <p className="detail-text">
+              Call Us:
+              <br />
+              <a href={`tel:${contactNo}`} className="phone-link">
+                {contactNo}
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Details Section */}
-      <div className="contact-details">
-        <h2 className="details-title">Visit Our Location</h2>
-        <div className="detail-item">
-          <i className="fas fa-map-marker-alt"></i> {/* You need Font Awesome for icons */}
-          <p className="detail-text">
-            Address:<br />
-            <span className="address-link">{address}</span>
-          </p>
-        </div>
-        <div className="detail-item">
-          <i className="fas fa-phone"></i> {/* You need Font Awesome for icons */}
-          <p className="detail-text">
-            Call Us:<br />
-            <a href={`tel:${contactNo}`} className="phone-link">{contactNo}</a>
-          </p>
-        </div>
-      </div>
-    </div>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-links">
-          <a href="#">About Us</a>
-          <a href="#">Contact</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </div>
-        <div className="social-links">{/* Social media icons */}</div>
-        <p className="copyright">© 2024 Trendify. All rights reserved.</p>
-      </footer>
+    
     </div>
   );
 };

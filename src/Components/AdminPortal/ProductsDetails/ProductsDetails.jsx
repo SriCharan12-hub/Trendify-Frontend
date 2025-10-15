@@ -165,11 +165,7 @@ const ProductsDetails = () => {
                     </div>
                 </div>
 
-                <footer className="footer">
-                    <div className="footer-content">
-                        <p>©2024 Trendify Admin. All rights reserved.</p>
-                    </div>
-                </footer>
+               
             </div>
         </div>
     );
